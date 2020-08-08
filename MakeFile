@@ -1,0 +1,4 @@
+tttcomputer: state.h evaluate.h evaluate.cpp node.h node.cpp main.cpp
+	g++ -o tttcomputer evaluate.cpp node.cpp main.cpp -std=c++11
+clean:
+	rm tttcomputer
