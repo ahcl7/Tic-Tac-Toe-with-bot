@@ -1,11 +1,11 @@
-#include "state.h"
+#include <bitset>
+#include <string.h>
 #include <iostream>
+
+#include "state.h"
 #include "node.h"
 #include "evaluate.h"
 #include "assert.h"
-#include <bitset>
-
-// using namespace std;
 
 void displayBoard(int* board[3]) {
 	for(int i = 0 ; i < 3; i++) {
@@ -20,18 +20,37 @@ void displayBoard(int* board[3]) {
 	std::cout << std::endl;	
 }
 
-void testEvaluate() {
-	std::bitset<9> x("001000100");
-	std::bitset<9> o("010100000");
-	State state = State(x, o);
-	assert(Eval::evaluate(state) == Eval::MAX_SCORE);
-	std::cout << "Correct!";
 
+
+void youMove(Node*& root, int** board, int turn) {
+	if (Eval::isStopState(root->state)) return;
+	std::cout << "You play: ";
+	int x , y;
+	std::cin >> x >> y;
+	board[x][y] = turn;
+	root = TreeNode::move(root, x, y);
+	displayBoard(board);
+	if (Eval::getWinner(root->state)) {
+		std::cout << "You win!";
+		exit(0);
+	}
 }
-int main() {
 
-	// testEvaluate();
-	// return 0;
+void computerMove(Node*& root, int** board, int turn) {
+	if (Eval::isStopState(root->state)) return;
+	int k = TreeNode::getBestMove(root);
+	board[k / 3][k % 3] = turn;
+	std::cout << "Computer play:" << std::endl;
+	displayBoard(board);
+	root = TreeNode::move(root, k / 3, k % 3);
+	if (Eval::getWinner(root->state)) {
+		std::cout << "Computer win!";
+		exit(0);
+	}
+}
+
+
+int main() {
 	int* board[3];
 	for(int i = 0 ; i < 3; i++) {
 		board[i] = new int[3];
@@ -48,28 +67,23 @@ int main() {
 	TreeNode::createTree(root);
 	
 	std::cout << "Setup done!" << std::endl;
-	while (!Eval::isStopState(root->state)) {
 
-		std::cout << "You play: ";
-		int x , y;
-		std::cin >> x >> y;
-		board[x][y] = 2;
-		root = TreeNode::move(root, x, y);
-		displayBoard(board);
-		if (Eval::isStopState(root->state)) {
-			std::cout << "You win!";
-			return 0;
+
+	std::cout << "Do you want to play first?" << std::endl;
+
+	std::string s;
+	std::cin >> s;
+
+	bool first = false;
+	if (s == "Y" || s == "y" || s == "yes" || s == "YES") first = true;
+	while (!Eval::isStopState(root->state)) {
+		if (first) {
+			youMove(root, board, 1);
+			computerMove(root, board, 2);
+		} else {
+			computerMove(root, board, 1);
+			youMove(root, board, 2);
 		}
-		int k = TreeNode::getBestMove(root);
-		board[k / 3][k % 3] = 1;
-		std::cout << "Computer play:" << std::endl;
-		displayBoard(board);
-		root = TreeNode::move(root, k / 3, k % 3);
-		if (Eval::isStopState(root->state)) {
-			std::cout << "Computer win!";
-			return 0;
-		}
-		
 	}
 
 	std::cout << "Game draw!";
